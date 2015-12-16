@@ -2,7 +2,9 @@
 # Main function which calculates score on cross_validation and prepares solution.
 #
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import RandomForestRegressor
+from sklearn import cross_validation
 
 
 def load_train():
@@ -36,15 +38,36 @@ def prepare_solution():
     Y = extract_labels(train)
     rf = RandomForestRegressor(n_jobs=-1)
     model = rf.fit(X, Y)
+    print('Train score: %f' % loss(Y, model.predict(X)))
     test = load_test()
     X2 = build_features(test)
     Y2 = model.predict(X2)
-    predictions = pd.DataFrame(Y2, columns=['predict_0', 'predict_1', 'predict_2'])
+    save_predictions(Y2, test)
+
+
+def save_predictions(y, test):
+    predictions = pd.DataFrame(y, columns=['predict_0', 'predict_1', 'predict_2'])
     predictions['id'] = test['id']
     predictions[['id', 'predict_0', 'predict_1', 'predict_2']].to_csv('../data/solution.csv', index=False)
 
 
-# def logloss(expected, predicted):
-#     logloss=−1N∑i=1N∑j=1Myijlog(pij),
+def cross_validate():
+    (train, test) = cross_validation.train_test_split(load_train())
+    X = build_features(train)
+    Y = extract_labels(train)
+    X2 = build_features(test)
+    Y2 = extract_labels(test)
+    rf = RandomForestRegressor(n_jobs=-1)
+    model = rf.fit(X, Y)
+    print('Cross validation score: %f' % loss(Y2, model.predict(X2)))
+
+
+def loss(expected, predicted):
+    predicted = np.minimum(predicted, 1-10**-15)
+    predicted = np.maximum(predicted, 10**-15)
+    ps = np.multiply(expected, np.log(predicted))
+    return -ps.sum().sum()/len(expected)
+
 
 prepare_solution()
+cross_validate()
