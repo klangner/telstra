@@ -44,7 +44,7 @@ def prepare_solution():
     predictions[['id', 'predict_0', 'predict_1', 'predict_2']].to_csv('../data/solution.csv', index=False)
 
 
-def logloss(expected, predicted):
-    logloss=−1N∑i=1N∑j=1Myijlog(pij),
+# def logloss(expected, predicted):
+#     logloss=−1N∑i=1N∑j=1Myijlog(pij),
 
 prepare_solution()
