@@ -8,7 +8,7 @@ from sklearn import cross_validation
 from datasets import Dataset, save_predictions, load_cross_validation
 
 
-FEATURES_COUNT = 386
+FEATURES_COUNT = 386+53
 HIDDEN_NEURON_COUNT = 15
 OUTPUT_CLASSES = 3
 
@@ -83,7 +83,7 @@ def cross_validate():
 
 def prepare_submission():
     print('Solution: Neural Network with %d hidden units' % HIDDEN_NEURON_COUNT)
-    network = ReluNetwork(train_steps=10**5)
+    network = ReluNetwork(train_steps=10**6)
     train = Dataset.from_train()
     test = Dataset.from_test()
     X = train.get_features()
@@ -96,5 +96,5 @@ def prepare_submission():
     save_predictions(predictions, test.df)
 
 
-cross_validate()
-# prepare_submission()
+# cross_validate()
+prepare_submission()

@@ -20,17 +20,27 @@ class Dataset(object):
         return Dataset(pd.read_csv('../data/test.csv'))
 
     def get_features(self):
-        # Prepare log features
+        # Merge log features
+        merged = self.df.merge(self._log_feature(), on='id')
+        columns = ['feature %d' % i for i in range(1, 387)]
+        merged = merged.merge(self._event_type(), on='id')
+        columns.extend(['event_type_event_type %d' % i for i in range(1, 54)])
+        return merged[columns]
+
+    def _log_feature(self):
+        """ Prepare log features """
         log_feature = pd.read_csv('../data/log_feature.csv')
         log_feature['volume'] = log_feature['volume'] / log_feature['volume'].max()
         lf = log_feature.groupby(['id', 'log_feature']).max()
         lf = lf.unstack(1).fillna(0)
-        lf = lf['volume'].reset_index()
-        # Merge log features
-        merged = self.df.merge(lf, on='id')
-        # Select DataFrame columns
-        columns = ['feature %d' % i for i in range(1, 387)]
-        return merged[columns]
+        return lf['volume'].reset_index()
+
+    def _event_type(self):
+        """ Prepare event types """
+        event_type = pd.read_csv('../data/event_type.csv')
+        data = pd.get_dummies(event_type).groupby('id').sum().reset_index()
+        data['event_type_event_type 16'] = data['event_type_event_type 54']
+        return data
 
     def get_labels(self):
         self.df['severity_0'] = self.df.fault_severity.apply(lambda x: 1 if x == 0 else 0)
