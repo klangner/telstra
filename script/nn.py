@@ -8,12 +8,12 @@ from sklearn import cross_validation
 from datasets import Dataset, save_predictions, load_cross_validation
 
 
-FEATURES_COUNT = 386+53
-HIDDEN_NEURON_COUNT = 15
+FEATURES_COUNT = 386+53+10+5
+HIDDEN_NEURON_COUNT = 5
 OUTPUT_CLASSES = 3
 
 
-class ReluNetwork(object):
+class NeuralNetwork(object):
 
     def __init__(self, train_steps=10**3):
         self.steps = train_steps
@@ -27,10 +27,12 @@ class ReluNetwork(object):
     def _build(self):
         w2 = self._weight_variable([FEATURES_COUNT, HIDDEN_NEURON_COUNT])
         b2 = self._bias_variable([HIDDEN_NEURON_COUNT])
-        l2 = tf.nn.relu(tf.matmul(self.x_placeholder, w2) + b2)
+        # l2 = tf.nn.relu(tf.matmul(self.x_placeholder, w2) + b2)
+        l2 = tf.nn.sigmoid(tf.matmul(self.x_placeholder, w2) + b2)
         w3 = self._weight_variable([HIDDEN_NEURON_COUNT, OUTPUT_CLASSES])
         b3 = self._bias_variable([OUTPUT_CLASSES])
-        l3 = tf.nn.relu(tf.matmul(l2, w3) + b3)
+        # l3 = tf.nn.relu(tf.matmul(l2, w3) + b3)
+        l3 = tf.nn.sigmoid(tf.matmul(l2, w3) + b3)
         return tf.nn.softmax(l3)
 
     def loss(self, expected, predicted):
@@ -68,7 +70,7 @@ class ReluNetwork(object):
 
 def cross_validate():
     print('Cross validate neural network with %d hidden units' % HIDDEN_NEURON_COUNT)
-    network = ReluNetwork()
+    network = NeuralNetwork(train_steps=10 ** 5)
     train, test = load_cross_validation()
     X = train.get_features()
     Y = train.get_labels()
@@ -83,7 +85,7 @@ def cross_validate():
 
 def prepare_submission():
     print('Solution: Neural Network with %d hidden units' % HIDDEN_NEURON_COUNT)
-    network = ReluNetwork(train_steps=10**6)
+    network = NeuralNetwork(train_steps=10 ** 6)
     train = Dataset.from_train()
     test = Dataset.from_test()
     X = train.get_features()
@@ -96,5 +98,5 @@ def prepare_submission():
     save_predictions(predictions, test.df)
 
 
-# cross_validate()
-prepare_submission()
+cross_validate()
+# prepare_submission()
