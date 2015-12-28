@@ -37,5 +37,5 @@ def loss(expected, predicted):
     return -ps.sum().sum()/len(expected)
 
 
-prepare_solution()
+# prepare_solution()
 cross_validate()

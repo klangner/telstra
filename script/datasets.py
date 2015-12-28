@@ -3,6 +3,7 @@
 #
 
 import pandas as pd
+import numpy as np
 from sklearn import cross_validation
 
 
@@ -33,7 +34,8 @@ class Dataset(object):
 
     def _log_feature(self):
         log_feature = pd.read_csv('../data/log_feature.csv')
-        log_feature['volume'] = log_feature['volume'] / log_feature['volume'].max()
+        # log_feature['volume'] = log_feature['volume'] / log_feature['volume'].max()
+        log_feature['volume'] = np.minimum(log_feature['volume'], 1)
         lf = log_feature.groupby(['id', 'log_feature']).max()
         lf = lf.unstack(1).fillna(0)
         return lf['volume'].reset_index()
@@ -60,6 +62,9 @@ class Dataset(object):
         self.df['severity_2'] = self.df.fault_severity.apply(lambda x: 1 if x == 2 else 0)
         return self.df[['severity_0', 'severity_1', 'severity_2']]
 
+    def get_multi_labels(self):
+        return self.df.fault_severity
+
 
 def load_cross_validation():
     (train, test) = cross_validation.train_test_split(pd.read_csv('../data/train.csv'), train_size=0.75)
@@ -72,3 +77,12 @@ def save_predictions(y, test):
     predictions[['id', 'predict_0', 'predict_1', 'predict_2']].to_csv('../data/solution.csv', index=False)
 
 
+def test():
+    train = Dataset.from_train()
+    logs = train._log_feature()
+    # Check if log features are normalized
+    print(logs.describe())
+    print('Done.')
+
+if __name__ == "__main__":
+    test()
