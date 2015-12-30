@@ -12,12 +12,12 @@ https://www.kaggle.com/c/telstra-recruiting-network
   * Softmax in output layer
   * Log features are normalized by biggest value in all records.
   * 37 hours of training.
-  * Looks like overfitting. On training set the score is 0.5484
+  * Looks like over fitting. On training set the score is 0.5484
 
 ### Score: 0.63708
 
   * Log features are counted as boolean value (Column volume is not used)
-  * Still overfits. Training stopped after score on training set: 0.557506
+  * Still over fits. Training stopped after score on training set: 0.557506
   * Training time: 6 minutes
 
 ## Features
