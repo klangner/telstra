@@ -2,9 +2,14 @@
 # Helper functions for TensorFlow solution
 #
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn import cross_validation
+from scipy import linalg
+
+
+FEATURES_COUNT = 386+53+10+5
+PCA_FEATURES_COUNT = 267
 
 
 class Dataset(object):
@@ -31,6 +36,16 @@ class Dataset(object):
         merged = merged.merge(self._severity_type(), on='id')
         columns.extend(['severity_type_severity_type %d' % (i+1) for i in range(5)])
         return merged[columns]
+
+    def get_pca_features(self, u_reduce):
+        X = self.get_features().as_matrix()
+        return np.matmul(X, u_reduce)
+
+    def pca(self):
+        X = self.get_features().as_matrix()
+        U, _, _ = linalg.svd(np.transpose(X))
+        return U[:, 0:PCA_FEATURES_COUNT]
+
 
     def _log_feature(self):
         log_feature = pd.read_csv('../data/log_feature.csv')

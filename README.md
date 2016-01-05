@@ -2,6 +2,12 @@
 
 https://www.kaggle.com/c/telstra-recruiting-network
 
+## To try
+
+  * Add regularization
+  * Check how many PCA dimension to use to retain 99% of variability
+  * Prepare confusion matrix
+
 
 ## Results
 
@@ -29,10 +35,18 @@ Testing different combination of features with cross validation score
   * Without 'severity_type', score: 0.6287 (train: 0.5363)
   * Without 'resource_type', score: 0.6430 (train: 0.5213)
 
+## Hyper-parameters
+
+  * Number of hidden layers (1 and 2 tested)
+  * Type of activation function (ReLu learn faster and over fits. sigmoid learn slower)
+  * Hidden units from 3 to 100 (5-10 looks like optimal value)
+  * Use of PCA to reduce dimension.
+
 ## What works
 
   * ReLu units performs better then sigmoid
   * Log features without volume column
+  * PCA reduces features from 454 to 267
 
 
 ## What doesnt work

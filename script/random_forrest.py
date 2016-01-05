@@ -3,6 +3,7 @@
 #
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
+
 from datasets import Dataset, save_predictions, load_cross_validation
 
 
@@ -21,9 +22,10 @@ def prepare_solution():
 
 def cross_validate():
     train, test = load_cross_validation()
-    X = train.get_features()
+    u = train.pca()
+    X = train.get_pca_features(u)
     Y = train.get_labels()
-    X2 = test.get_features()
+    X2 = test.get_pca_features(u)
     Y2 = test.get_labels()
     rf = RandomForestRegressor(n_jobs=-1)
     model = rf.fit(X, Y)
