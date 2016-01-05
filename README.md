@@ -53,4 +53,5 @@ Testing different combination of features with cross validation score
 
   * Switching to logistic units
   * Adding second hidden layer
-  * More then 5 hidden units (in single layer) overfits network
+  * More then 5 hidden units (in single layer) over fits network
+  * Using PCA makes over fitting bigger problem

@@ -81,8 +81,8 @@ class Dataset(object):
         return self.df.fault_severity
 
 
-def load_cross_validation():
-    (train, test) = cross_validation.train_test_split(pd.read_csv('../data/train.csv'), train_size=0.75)
+def load_cross_validation(train_size=0.75):
+    (train, test) = cross_validation.train_test_split(pd.read_csv('../data/train.csv'), train_size=train_size)
     return Dataset(train), Dataset(test)
 
 
