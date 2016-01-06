@@ -13,19 +13,17 @@ from datasets import Dataset, save_predictions, load_cross_validation, PCA_FEATU
 
 Params = namedtuple('Params', [
     'learning_rate',
-    'activation_function',          # 'sigmoid or 'relu'
-    'steps',                        # Log10 scale
-    'stop_on_test_score',           # Stop training if score on test set is getting bigger
-    'pca',                          # Use PCA on feature vestors if True
+    'steps',
     'keep_prob',                    # Dropout probability
-    'hidden_units',                 # Number of hidden units
     'normalization'                 # Normalization coefficient
 ])
 
 OUTPUT_CLASSES = 3
+HIDDEN_UNITS_1 = 100
+HIDDEN_UNITS_2 = 300
 
 
-class NeuralNetwork(object):
+class DeepNeuralNetwork(object):
 
     def __init__(self, params):
         self.params = params
@@ -39,18 +37,12 @@ class NeuralNetwork(object):
 
     def _build(self):
         """ NN with single hidden layer """
-        self.w2 = self._weight_variable([self.feature_count, self.params.hidden_units])
-        b2 = self._bias_variable([self.params.hidden_units])
-        if self.params.activation_function == 'sigmoid':
-            l2 = tf.nn.sigmoid(tf.matmul(self.x_placeholder, self.w2) + b2)
-        else:
-            l2 = tf.nn.relu(tf.matmul(self.x_placeholder, self.w2) + b2)
-        self.w3 = self._weight_variable([self.params.hidden_units, OUTPUT_CLASSES])
+        self.w2 = self._weight_variable([PCA_FEATURES_COUNT, HIDDEN_UNITS_1])
+        b2 = self._bias_variable([HIDDEN_UNITS_1])
+        l2 = tf.nn.relu(tf.matmul(self.x_placeholder, self.w2) + b2)
+        self.w3 = self._weight_variable([HIDDEN_UNITS_1, OUTPUT_CLASSES])
         b3 = self._bias_variable([OUTPUT_CLASSES])
-        if self.params.activation_function == 'sigmoid':
-            l3 = tf.nn.sigmoid(tf.matmul(l2, self.w3) + b3)
-        else:
-            l3 = tf.nn.relu(tf.matmul(l2, self.w3) + b3)
+        l3 = tf.nn.relu(tf.matmul(l2, self.w3) + b3)
         self.keep_prob = tf.placeholder("float")
         l3_drop = tf.nn.dropout(l3, self.keep_prob)
         return tf.nn.softmax(l3_drop)
@@ -65,7 +57,7 @@ class NeuralNetwork(object):
         predicted = np.maximum(predicted, 10**-15)
         w2 = tf.reduce_sum(tf.pow(self.w2, 2))
         w3 = tf.reduce_sum(tf.pow(self.w3, 2))
-        l2 = self.params.normalization*(w2*w3)/self.params.hidden_units
+        l2 = self.params.normalization*(w2*w3)/(HIDDEN_UNITS_1)
         return -tf.reduce_sum(expected*tf.log(predicted)) + l2
 
     def fit(self, X, y, X2=None, y2=None):
@@ -122,7 +114,7 @@ def make_submission(network, params, u):
 def cross_validate(params):
     print('Cross validate with params')
     print(params)
-    network = NeuralNetwork(params)
+    network = DeepNeuralNetwork(params)
     train, test = load_cross_validation(0.8)
     u = train.pca()
     if params.pca:
@@ -143,57 +135,8 @@ def cross_validate(params):
     make_submission(network, params, u)
 
 
-def prepare_submission(params):
-    print('Prepare submission with params')
-    print(params)
-    network = NeuralNetwork(params)
-    train = Dataset.from_train()
-    u = train.pca()
-    if params.pca:
-        X = train.get_pca_features(u)
-    else:
-        X = train.get_features()
-    Y = train.get_labels()
-    network.fit(X, Y)
-    score = network.check_score(X, Y)
-    print('Train dataset score %f' % (score/len(X)))
-    make_submission(network, params, u)
-
-
-# 10^5 steps is around 10 minutes of training
-# Score is given as (train_score, test_score)
-
-# (0.819590, 0.825475) Fast with sigmoid functions
-FAST_SIGMOID_1 = Params(learning_rate=0.0003, steps=5, activation_function='sigmoid', stop_on_test_score=False,
-                        pca=True, keep_prob=1, hidden_units=10, normalization=0)
-
-# (0.475820, 0.669871) Fast with relu functions
-FAST_RELU_1 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                     pca=True, keep_prob=1, hidden_units=10, normalization=0)
-
-# (0.592587, 0.606354) Fast with relu functions. Stop when over fits
-FAST_RELU_2 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=True,
-                     pca=True, keep_prob=1, hidden_units=10, normalization=0)
-
-# 0.600571, 0.609436 After submission: 0.64360
-FAST_RELU_30 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                      pca=True, keep_prob=1, hidden_units=30, normalization=0.9)
-
-FAST_RELU_10 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                      pca=True, keep_prob=1, hidden_units=10, normalization=0.6)
-
-#
-FAST_RELU_50 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                      pca=True, keep_prob=1, hidden_units=50, normalization=0.6)
-
-
-# (0.641099, 0.66908) Submission
-SUBMISSION_PARAM_10 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                           pca=True, keep_prob=1, hidden_units=30, normalization=0.)
+PARAMS = Params(learning_rate=0.0003, steps=5, keep_prob=1, normalization=0.03)
 
 if __name__ == "__main__":
-    if 'submit' in sys.argv:
-        prepare_submission(FAST_RELU_30)
-    else:
-        cross_validate(FAST_RELU_30)
+    cross_validate(PARAMS)
     print('Done.')

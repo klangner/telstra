@@ -4,8 +4,6 @@ https://www.kaggle.com/c/telstra-recruiting-network
 
 ## To try
 
-  * Add regularization
-  * Check how many PCA dimension to use to retain 99% of variability
   * Prepare confusion matrix
 
 
@@ -46,12 +44,13 @@ Testing different combination of features with cross validation score
 
   * ReLu units performs better then sigmoid
   * Log features without volume column
-  * PCA reduces features from 454 to 267
+  * PCA reduces features from 454 to 296 (99% variance)
+  * L2 Regularization
 
 
 ## What doesnt work
 
   * Switching to logistic units
-  * Adding second hidden layer
+  * Adding second hidden layer. Doesn't improve score
   * More then 5 hidden units (in single layer) over fits network
   * Using PCA makes over fitting bigger problem

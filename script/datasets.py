@@ -9,7 +9,7 @@ from scipy import linalg
 
 
 FEATURES_COUNT = 386+53+10+5
-PCA_FEATURES_COUNT = 267
+PCA_FEATURES_COUNT = 296  # 0.990155 variance retained
 
 
 class Dataset(object):
