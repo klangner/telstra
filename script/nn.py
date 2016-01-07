@@ -175,12 +175,12 @@ FAST_RELU_1 = Params(learning_rate=0.0003, steps=5, activation_function='relu', 
 FAST_RELU_2 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=True,
                      pca=True, keep_prob=1, hidden_units=10, normalization=0)
 
+FAST_RELU_10 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
+                      pca=True, keep_prob=1, hidden_units=10, normalization=0.6)
+
 # 0.600571, 0.609436 After submission: 0.64360
 FAST_RELU_30 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
                       pca=True, keep_prob=1, hidden_units=30, normalization=0.9)
-
-FAST_RELU_10 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                      pca=True, keep_prob=1, hidden_units=10, normalization=0.6)
 
 #
 FAST_RELU_50 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
