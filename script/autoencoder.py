@@ -14,7 +14,7 @@ INPUT_UNITS = FEATURES_COUNT
 HIDDEN_UNITS = 256
 
 LEARNING_RATE = 1e-4
-STEPS = 5 * (10 ** 4)
+STEPS = 10 ** 5
 
 
 class AutoEncoder(object):
@@ -28,11 +28,11 @@ class AutoEncoder(object):
         # Hidden layer
         w2 = self._weight_variable([INPUT_UNITS, HIDDEN_UNITS])
         b2 = self._bias_variable([HIDDEN_UNITS])
-        l2 = tf.nn.sigmoid(tf.matmul(self.x_placeholder, w2) + b2)
+        l2 = tf.nn.relu(tf.matmul(self.x_placeholder, w2) + b2)
         # Output layer
         w3 = self._weight_variable([HIDDEN_UNITS, INPUT_UNITS])
         b3 = self._bias_variable([INPUT_UNITS])
-        l3 = tf.nn.sigmoid(tf.matmul(l2, w3) + b3)
+        l3 = tf.nn.relu(tf.matmul(l2, w3) + b3)
         return tf.nn.softmax(l3)
 
     def loss(self, expected, predicted):
