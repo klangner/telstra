@@ -189,7 +189,7 @@ FAST_RELU_50 = Params(learning_rate=0.0003, steps=5, activation_function='relu',
 
 # (0.641099, 0.66908) Submission
 SUBMISSION_PARAM_10 = Params(learning_rate=0.0003, steps=5, activation_function='relu', stop_on_test_score=False,
-                           pca=True, keep_prob=1, hidden_units=30, normalization=0.)
+                           pca=True, keep_prob=1, hidden_units=30, normalization=0)
 
 if __name__ == "__main__":
     if 'submit' in sys.argv:
