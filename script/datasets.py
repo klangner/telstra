@@ -16,6 +16,11 @@ class Dataset(object):
 
     def __init__(self, data):
         self.df = data
+        self._features = self._process_features().as_matrix()
+        self._labels = self._process_labels().as_matrix()
+        self._epochs_completed = 0
+        self._index_in_epoch = 0
+        self._num_examples = len(self._features)
 
     @staticmethod
     def from_train():
@@ -26,6 +31,35 @@ class Dataset(object):
         return Dataset(pd.read_csv('../data/test.csv'))
 
     def get_features(self):
+        return self._features
+
+    def get_labels(self):
+        return self._labels
+
+    def next_batch(self, batch_size=20):
+        start = self._index_in_epoch
+        self._index_in_epoch += batch_size
+        if self._index_in_epoch > self._num_examples:
+            self._epochs_completed += 1
+            # Shuffle the data
+            perm = np.arange(self._num_examples)
+            np.random.shuffle(perm)
+            self._features = self._features[perm]
+            self._labels = self._labels[perm]
+            # Start next epoch
+            start = 0
+            self._index_in_epoch = batch_size
+            assert batch_size <= self._num_examples
+        end = self._index_in_epoch
+        return self._features[start:end], self._labels[start:end]
+
+    def epoch_completed(self):
+        return self._epochs_completed
+
+    def size(self):
+        return self._num_examples
+
+    def _process_features(self):
         # Merge log features
         merged = self.df.merge(self._log_feature(), on='id')
         columns = ['feature %d' % (i+1) for i in range(386)]
@@ -71,7 +105,7 @@ class Dataset(object):
         data = pd.get_dummies(severity_type).groupby('id').sum().reset_index()
         return data
 
-    def get_labels(self):
+    def _process_labels(self):
         self.df['severity_0'] = self.df.fault_severity.apply(lambda x: 1 if x == 0 else 0)
         self.df['severity_1'] = self.df.fault_severity.apply(lambda x: 1 if x == 1 else 0)
         self.df['severity_2'] = self.df.fault_severity.apply(lambda x: 1 if x == 2 else 0)
