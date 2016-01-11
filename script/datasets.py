@@ -17,7 +17,8 @@ class Dataset(object):
     def __init__(self, data):
         self.df = data
         self._features = self._process_features().as_matrix()
-        self._labels = self._process_labels().as_matrix()
+        if 'fault_severity' in self.df.columns:
+            self._labels = self._process_labels().as_matrix()
         self._epochs_completed = 0
         self._index_in_epoch = 0
         self._num_examples = len(self._features)
