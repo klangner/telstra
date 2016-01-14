@@ -12,6 +12,7 @@ from collections import namedtuple
 import tensorflow as tf
 
 from datasets import *
+import helpers
 
 Params = namedtuple('Params', [
     'learning_rate',
@@ -47,18 +48,18 @@ class DeepNetwork(object):
 
     def _build(self):
         # First hidden layer
-        w2 = self._weight_variable([INPUT_UNITS, HIDDEN_UNITS_1])
-        b2 = self._bias_variable([HIDDEN_UNITS_1])
+        w2 = helpers.weight_variable([INPUT_UNITS, HIDDEN_UNITS_1])
+        b2 = helpers.bias_variable([HIDDEN_UNITS_1])
         l2 = tf.nn.relu6(tf.matmul(self.x_placeholder, w2) + b2)
         l2_drop = tf.nn.dropout(l2, self.keep_prob)
         # Second hidden layer
-        w3 = self._weight_variable([HIDDEN_UNITS_1, HIDDEN_UNITS_2])
-        b3 = self._bias_variable([HIDDEN_UNITS_2])
+        w3 = helpers.weight_variable([HIDDEN_UNITS_1, HIDDEN_UNITS_2])
+        b3 = helpers.bias_variable([HIDDEN_UNITS_2])
         l3 = tf.nn.relu6(tf.matmul(l2_drop, w3) + b3)
         l3_drop = tf.nn.dropout(l3, self.keep_prob)
         # Output layer
-        w5 = self._weight_variable([HIDDEN_UNITS_2, OUTPUT_CLASSES])
-        b5 = self._bias_variable([OUTPUT_CLASSES])
+        w5 = helpers.weight_variable([HIDDEN_UNITS_2, OUTPUT_CLASSES])
+        b5 = helpers.bias_variable([OUTPUT_CLASSES])
         l5 = tf.nn.relu6(tf.matmul(l3_drop, w5) + b5)
         return tf.nn.softmax(l5)
 
@@ -103,14 +104,6 @@ class DeepNetwork(object):
                                                   self.y_placeholder: data.get_labels(),
                                                   self.keep_prob: 1})
         return score/data.size()
-
-    def _weight_variable(self, shape):
-        initial = tf.truncated_normal(shape, stddev=0.1)
-        return tf.Variable(initial)
-
-    def _bias_variable(self, shape):
-        initial = tf.constant(0.1, shape=shape)
-        return tf.Variable(initial)
 
 
 def make_submission(network):
