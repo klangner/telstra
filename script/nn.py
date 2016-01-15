@@ -99,10 +99,12 @@ class NeuralNetwork(object):
         loss = self.loss(self.y_placeholder, self.model)
         return self.session.run(loss, feed_dict={self.x_placeholder: X, self.y_placeholder: Y, self.keep_prob: 1})
 
-    def _weight_variable(self, shape):
+    @staticmethod
+    def _weight_variable(shape):
         initial = tf.truncated_normal(shape, stddev=0.1)
         return tf.Variable(initial)
 
+    @staticmethod
     def _bias_variable(self, shape):
         initial = tf.constant(0.1, shape=shape)
         return tf.Variable(initial)

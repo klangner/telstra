@@ -112,7 +112,8 @@ class NeuralNet(object):
         l5 = tf.nn.relu6(tf.matmul(l2_drop, w5) + b5)
         return tf.nn.softmax(l5)
 
-    def loss(self, expected, predicted):
+    @staticmethod
+    def loss(expected, predicted):
         predicted = np.minimum(predicted, 1-10**-15)
         predicted = np.maximum(predicted, 10**-15)
         return -tf.reduce_sum(expected*tf.log(predicted))
