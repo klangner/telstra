@@ -24,9 +24,16 @@ Params = namedtuple('Params', [
 ])
 
 INPUT_UNITS = FEATURES_COUNT
-HIDDEN_UNITS_1 = 64
-HIDDEN_UNITS_2 = 32
+HIDDEN_UNITS_1 = 500
+HIDDEN_UNITS_2 = 100
 OUTPUT_CLASSES = 3
+
+flags = tf.app.flags
+FLAGS = flags.FLAGS
+flags.DEFINE_float('learning_rate', 1e-4, 'Initial learning rate.')
+flags.DEFINE_float('min_score', 0.6, 'Don\'t stop before getting this score.')
+flags.DEFINE_integer('max_steps', 10 ** 5, 'Number of steps to run trainer.')
+flags.DEFINE_integer('keep_prob', 0.5, 'Dropout probability.')
 
 
 class DeepNetwork(object):
@@ -40,8 +47,7 @@ class DeepNetwork(object):
         * Output layer: Softmax with 3 units
     """
 
-    def __init__(self, params):
-        self.params = params
+    def __init__(self):
         self.x_placeholder = tf.placeholder("float", shape=[None, INPUT_UNITS])
         self.y_placeholder = tf.placeholder("float", shape=[None, OUTPUT_CLASSES])
         self.keep_prob = tf.placeholder("float")
@@ -53,20 +59,20 @@ class DeepNetwork(object):
         # First hidden layer
         w2 = helpers.weight_variable([INPUT_UNITS, HIDDEN_UNITS_1])
         b2 = helpers.bias_variable([HIDDEN_UNITS_1])
-        l2 = tf.nn.relu6(tf.matmul(self.x_placeholder, w2) + b2)
+        l2 = tf.nn.relu(tf.matmul(self.x_placeholder, w2) + b2)
         l2_drop = tf.nn.dropout(l2, self.keep_prob)
         # Second hidden layer
         w3 = helpers.weight_variable([HIDDEN_UNITS_1, HIDDEN_UNITS_2])
         b3 = helpers.bias_variable([HIDDEN_UNITS_2])
-        l3 = tf.nn.relu6(tf.matmul(l2_drop, w3) + b3)
+        l3 = tf.nn.relu(tf.matmul(l2_drop, w3) + b3)
         l3_drop = tf.nn.dropout(l3, self.keep_prob)
         # Output layer
         w5 = helpers.weight_variable([HIDDEN_UNITS_2, OUTPUT_CLASSES])
         b5 = helpers.bias_variable([OUTPUT_CLASSES])
-        l5 = tf.nn.relu6(tf.matmul(l3_drop, w5) + b5)
-        return tf.nn.softmax(l5)
+        return tf.nn.softmax(tf.matmul(l3_drop, w5) + b5)
 
-    def loss(self, expected, predicted):
+    @staticmethod
+    def loss(expected, predicted):
         predicted = np.minimum(predicted, 1-10**-15)
         predicted = np.maximum(predicted, 10**-15)
         return -tf.reduce_sum(expected*tf.log(predicted))
@@ -74,21 +80,21 @@ class DeepNetwork(object):
     def fit(self, train_data, cv_data = None):
         """ Train network on the given data """
         cross_entropy = self.loss(self.y_placeholder, self.model)
-        train_step = tf.train.AdamOptimizer(self.params.learning_rate).minimize(cross_entropy)
+        train_step = tf.train.AdamOptimizer(FLAGS.learning_rate).minimize(cross_entropy)
         init = tf.initialize_all_variables()
         self.session.run(init)
         best_score = 1
         not_improvement_count = 0
-        for i in range(self.params.steps):
+        for i in range(FLAGS.max_steps):
             X, y = train_data.next_batch()
             self.session.run(train_step, feed_dict={self.x_placeholder: X, self.y_placeholder: y,
-                                                    self.keep_prob: self.params.keep_prob})
+                                                    self.keep_prob: FLAGS.keep_prob})
             if i % 1000 == 0:
                 train_accuracy = self.check_score(train_data)
                 if cv_data is not None:
                     test_accuracy = self.check_score(cv_data)
                 print "step %d, training accuracy %g (test: %g)" % (i, train_accuracy, test_accuracy)
-                if test_accuracy < 0.63:
+                if test_accuracy < FLAGS.min_score:
                     if test_accuracy < best_score:
                         self.save_session()
                         best_score = test_accuracy
@@ -123,10 +129,8 @@ def make_submission(network):
     save_predictions(predictions, data.df)
 
 
-def cross_validate(params):
-    print('Cross validate with params')
-    print(params)
-    network = DeepNetwork(params)
+def cross_validate():
+    network = DeepNetwork()
     train, test = load_cross_validation(0.8)
     network.fit(train, test)
     network.restore_session()
@@ -137,13 +141,7 @@ def cross_validate(params):
     return network
 
 
-# (0.559475, 0.585941) Kaggle: 0.63373 (Best so far)
-PARAMS1 = Params(learning_rate=1e-4, steps=10**5, keep_prob=1)
-
-# (0.638753, 0.648865) 20 000 steps, alpha=1e-4, keep_prob=0.2
-PARAMS = Params(learning_rate=1e-5, steps=2*(10**5), keep_prob=0.4)
-
 if __name__ == "__main__":
-    model = cross_validate(PARAMS1)
+    model = cross_validate()
     make_submission(model)
     print('Done.')
