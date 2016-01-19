@@ -14,10 +14,12 @@ import tensorflow as tf
 from datasets import *
 import helpers
 
+
+SESSION_FILE = '../data/deep_network.session'
+
 Params = namedtuple('Params', [
     'learning_rate',
     'steps',
-    'stop_on_test_score',
     'keep_prob'                    # Dropout probability
 ])
 
@@ -45,6 +47,7 @@ class DeepNetwork(object):
         self.keep_prob = tf.placeholder("float")
         self.model = self._build()
         self.session = tf.Session()
+        self._saver = tf.train.Saver()
 
     def _build(self):
         # First hidden layer
@@ -74,8 +77,8 @@ class DeepNetwork(object):
         train_step = tf.train.AdamOptimizer(self.params.learning_rate).minimize(cross_entropy)
         init = tf.initialize_all_variables()
         self.session.run(init)
-        last_score = 1
-        test_accuracy = 0
+        best_score = 1
+        not_improvement_count = 0
         for i in range(self.params.steps):
             X, y = train_data.next_batch()
             self.session.run(train_step, feed_dict={self.x_placeholder: X, self.y_placeholder: y,
@@ -85,14 +88,15 @@ class DeepNetwork(object):
                 if cv_data is not None:
                     test_accuracy = self.check_score(cv_data)
                 print "step %d, training accuracy %g (test: %g)" % (i, train_accuracy, test_accuracy)
-                if test_accuracy < 0.6 and test_accuracy < last_score:
-                    make_submission(self.model)
-                    last_score = test_accuracy
-                # if self.params.stop_on_test_score and test_accuracy > last_score:
-                #     print('Accuracy is getting worse. Stop learning')
-                #     break
-                # else:
-                #     last_score = test_accuracy
+                if test_accuracy < 0.63:
+                    if test_accuracy < best_score:
+                        self.save_session()
+                        best_score = test_accuracy
+                        not_improvement_count = 0
+                    elif not_improvement_count < 3:
+                        not_improvement_count += 1
+                    else:
+                        break
 
     def predict(self, X):
         Y = self.session.run(self.model, feed_dict={self.x_placeholder: X, self.keep_prob: 1})
@@ -104,6 +108,12 @@ class DeepNetwork(object):
                                                   self.y_placeholder: data.get_labels(),
                                                   self.keep_prob: 1})
         return score/data.size()
+
+    def save_session(self):
+        self._saver.save(self.session, SESSION_FILE)
+
+    def restore_session(self):
+        self._saver.restore(self.session, SESSION_FILE)
 
 
 def make_submission(network):
@@ -119,6 +129,7 @@ def cross_validate(params):
     network = DeepNetwork(params)
     train, test = load_cross_validation(0.8)
     network.fit(train, test)
+    network.restore_session()
     score = network.check_score(train)
     print("Train dataset score %f" % score)
     score = network.check_score(test)
@@ -127,12 +138,12 @@ def cross_validate(params):
 
 
 # (0.559475, 0.585941) Kaggle: 0.63373 (Best so far)
-PARAMS1 = Params(learning_rate=1e-4, steps=10**5, stop_on_test_score=False, keep_prob=0.4)
+PARAMS1 = Params(learning_rate=1e-4, steps=10**5, keep_prob=1)
 
 # (0.638753, 0.648865) 20 000 steps, alpha=1e-4, keep_prob=0.2
-PARAMS = Params(learning_rate=1e-5, steps=2*(10**5), stop_on_test_score=False, keep_prob=0.4)
+PARAMS = Params(learning_rate=1e-5, steps=2*(10**5), keep_prob=0.4)
 
 if __name__ == "__main__":
     model = cross_validate(PARAMS1)
-    # make_submission(model)
+    make_submission(model)
     print('Done.')
